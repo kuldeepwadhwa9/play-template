@@ -39,5 +39,44 @@ package controllers {
   
   }
 
+  // @LINE:7
+  class ReverseApplicationController(_prefix: => String) {
+    def _defaultPrefix: String = {
+      if (_prefix.endsWith("/")) "" else "/"
+    }
+
+  
+    // @LINE:8
+    def read(id:String): Call = {
+      
+      Call("GET", _prefix + { _defaultPrefix } + "api/" + play.core.routing.dynamicString(implicitly[play.api.mvc.PathBindable[String]].unbind("id", id)))
+    }
+  
+    // @LINE:12
+    def create: Call = {
+      
+      Call("POST", _prefix + { _defaultPrefix } + "api")
+    }
+  
+    // @LINE:16
+    def delete(id:String): Call = {
+      
+      Call("DELETE", _prefix + { _defaultPrefix } + "api/" + play.core.routing.dynamicString(implicitly[play.api.mvc.PathBindable[String]].unbind("id", id)))
+    }
+  
+    // @LINE:14
+    def update(id:String): Call = {
+      
+      Call("PUT", _prefix + { _defaultPrefix } + "api/" + play.core.routing.dynamicString(implicitly[play.api.mvc.PathBindable[String]].unbind("id", id)))
+    }
+  
+    // @LINE:7
+    def index: Call = {
+      
+      Call("GET", _prefix + { _defaultPrefix } + "api")
+    }
+  
+  }
+
 
 }

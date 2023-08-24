@@ -9,3 +9,12 @@ project/project
 project/target
 target
 .target
+logs
+target
+/.bsp
+/.idea
+/.idea_modules
+/.classpath
+/.project
+/.settings
+/RUNNING_PID
