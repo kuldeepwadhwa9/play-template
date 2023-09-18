@@ -1,20 +1,49 @@
 package controllers
 
-import play.api.mvc.{BaseController, ControllerComponents}
+import models.DataModel
+import models.APIError._
+import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
+import play.api.mvc.{Action, AnyContent, BaseController, ControllerComponents}
+import repositories.DataRepository
 
 import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ApplicationController @Inject()(val controllerComponents: ControllerComponents) extends BaseController {
+class ApplicationController @Inject()(val controllerComponents: ControllerComponents, val dataRepository: DataRepository)
+                                     (implicit val ec: ExecutionContext) extends BaseController {
 
-  def index() = TODO
+  def index(): Action[AnyContent] = Action.async { implicit request =>
+    dataRepository.index().map {
+      case Right(item: Seq[DataModel]) => Ok {
+        Json.toJson(item)
+      }
+      case Left(error) => Status(error)(Json.toJson("Unable to find any books"))
+    }
+  }
 
-  def create() = TODO
+  def create(): Action[JsValue] = Action.async(parse.json) { implicit request =>
+    request.body.validate[DataModel] match {
+      case JsSuccess(dataModel, _) =>
+        dataRepository.create(dataModel).map(_ => Created)
+      case JsError(_) => Future(BadRequest)
+    }
+  }
 
-  def read(id: String) = TODO
+  def read(id: String) = Action.async { _ =>
+        dataRepository.read(id).map(_ => Accepted)
+    }
 
-  def update(id: String) = TODO
+  def update(id: String) = Action.async(parse.json) { implicit request =>
+    request.body.validate[DataModel] match {
+      case JsSuccess(dataModel, _) =>
+        dataRepository.update(id, dataModel).map(_ => Accepted)
+      case JsError(_) => Future(BadRequest)
+    }
+  }
 
-  def delete(id: String) = TODO
+  def delete(id: String) = Action.async { _ =>
+       dataRepository.delete(id).map(_ => Accepted)
+    }
 
 }
