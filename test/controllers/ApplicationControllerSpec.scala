@@ -17,10 +17,10 @@ class ApplicationControllerSpec extends BaseSpecWithApplication {
   )
 
   private val dataModel = DataModel(
-    "abcd",
-    "test name",
-    "test description",
-    100
+    _id = "abcd",
+    name = "test name",
+    description = "test description",
+    numSales = 100
   )
 
   "ApplicationController .index()" should {
@@ -31,116 +31,85 @@ class ApplicationControllerSpec extends BaseSpecWithApplication {
     }
   }
 
-  "ApplicationController .create()" should {
-    val result = TestApplicationController.create()(FakeRequest())
-
-    "return TODO" in {
-      status(result) shouldBe Status.OK
-    }
-  }
-
-  "ApplicationController .read()" should {
-    val result = TestApplicationController.read("Hello")(FakeRequest())
-
-    "return TODO" in {
-      status(result) shouldBe Status.OK
-    }
-  }
-
-  "ApplicationController .update()" should {
-    val result = TestApplicationController.update("Hello")(FakeRequest())
-
-    "return TODO" in {
-      status(result) shouldBe Status.OK
-    }
-  }
-
-  "ApplicationController .delete()" should {
-    val result = TestApplicationController.delete("Hello")(FakeRequest())
-
-    "return TODO" in {
-      status(result) shouldBe Status.OK
-    }
-  }
-
   "ApplicationController .create" should {
-
+    beforeEach()
     "create a book in the database" in {
-      beforeEach()
+
       val request: FakeRequest[JsValue] = buildPost("/api").withBody[JsValue](Json.toJson(dataModel))
       val createdResult: Future[Result] = TestApplicationController.create()(request)
 
-      status(createdResult) shouldBe Status.BAD_REQUEST
-      afterEach()
+      status(createdResult) shouldBe Status.CREATED
+
     }
+
+    "Read a book with invalid json return Bad Request" in {
+      val request = buildGet("/api/create").withBody[JsValue](Json.parse(
+        """
+          |{
+          |"name": "My Name"
+          |}
+          |""".stripMargin))
+      val createdResult = TestApplicationController.create()(request)
+      status(createdResult) shouldBe BAD_REQUEST
+
+    }
+    afterEach()
   }
 
   "ApplicationController .read" should {
 
     "find a book in the database by id" in {
       beforeEach()
-      val request: FakeRequest[JsValue] = buildGet(s"/api/${dataModel._id}").withBody[JsValue](Json.toJson(dataModel))
+      val request: FakeRequest[JsValue] = buildPost(s"/api/${dataModel._id}").withBody[JsValue](Json.toJson(dataModel))
       val createdResult: Future[Result] = TestApplicationController.create()(request)
 
-      //Hint: You could use status(createdResult) shouldBe Status.CREATED to check this has worked again
+      status(createdResult) shouldBe Status.CREATED
+      val readResult: Result = await(TestApplicationController.read("abcd")(FakeRequest()))
 
-      val readResult: Future[Result] = TestApplicationController.read("abcd")(FakeRequest())
-
-      status(readResult) shouldBe ACCEPTED
-      afterEach()
-    }
-
-
-    "Read a book with invalid json return Bad Request" in {
-      beforeEach()
-      val request = buildGet("/api/create").withBody[JsValue](Json.toJson(dataModel))
-      val createdResult = TestApplicationController.create()(request)
-      val readResult = TestApplicationController.read("aldd")(FakeRequest())
-      status(readResult) shouldBe BAD_REQUEST
-      afterEach()
-    }
-  }
-
-  "ApplicationController .create" should {
-    "Create a book in the database by id" in {
-      beforeEach()
-      val request: FakeRequest[JsValue] = buildPost(s"/api/${dataModel._id}").withBody[JsValue](Json.toJson(dataModel))
-
-      //Hint: You could use status(createdResult) shouldBe Status.CREATED to check this has worked again
-
-      val readResult: Future[Result] = TestApplicationController.create()(request)
-
-      status(readResult) shouldBe CREATED
-      contentAsJson(readResult).as[DataModel] shouldBe dataModel
+      readResult.header.status shouldBe ACCEPTED
       afterEach()
     }
 
   }
 
   "ApplicationController .update" should {
+    beforeEach()
     "Update a book in the database by id" in {
-      beforeEach()
-      val request = buildPut(s"/api/update/${dataModel._id}").withBody[JsValue](Json.toJson(dataModel))
-    TestApplicationController.create()(request)
-      val readResult = TestApplicationController.update("efgh")(FakeRequest())
+      val request: FakeRequest[JsValue] = buildPut(s"/api/update/${dataModel._id}").withBody[JsValue](Json.toJson(dataModel))
+      val createdResult = TestApplicationController.create()(request)
+      status(createdResult) shouldBe Status.CREATED
+      val dModel = DataModel(_id = "efgh", name = "test name 2", description = "test description 2", numSales = 200)
+      val updateRequest = buildPut(s"/api/update/${dataModel._id}").withBody[JsValue](Json.toJson(dModel))
+      val readResult = TestApplicationController.update("efgh")(updateRequest)
       status(readResult) shouldBe ACCEPTED
-
-      afterEach()
     }
+
+    "Update a book with invalid json body return Bad Request" in {
+      val request = buildPut(s"/api/update/${dataModel._id}").withBody[JsValue](Json.parse(
+        """
+          |{
+          |"name": "My Name"
+          |}
+          |""".stripMargin))
+      val createdResult = TestApplicationController.update("Hello")(request)
+      status(createdResult) shouldBe BAD_REQUEST
+
+    }
+    afterEach()
   }
 
   "ApplicationController .delete" should {
+    beforeEach()
     "Delete a book in the database by id" in {
-      beforeEach()
+
       val request = buildDelete(s"/api/delete/${dataModel._id}").withBody[JsValue](Json.toJson(dataModel))
       TestApplicationController.create()(request)
-      val readResult = TestApplicationController.update("efgh")(FakeRequest())
+      val readResult = TestApplicationController.delete("efgh")(FakeRequest())
       status(readResult) shouldBe ACCEPTED
 
-      afterEach()
     }
+    afterEach()
   }
-
 
   "test name" should {
     "do something" in {
