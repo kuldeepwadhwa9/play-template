@@ -1,16 +1,17 @@
 package controllers
 
-import models.DataModel
+import models.{DataModel, GoogleBook}
 import models.APIError._
 import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.mvc.{Action, AnyContent, BaseController, ControllerComponents}
 import repositories.DataRepository
+import services.LibraryService
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ApplicationController @Inject()(val controllerComponents: ControllerComponents, val dataRepository: DataRepository)
+class ApplicationController @Inject()(val controllerComponents: ControllerComponents, val dataRepository: DataRepository, val service: LibraryService)
                                      (implicit val ec: ExecutionContext) extends BaseController {
 
   def index(): Action[AnyContent] = Action.async { implicit request =>
@@ -31,8 +32,8 @@ class ApplicationController @Inject()(val controllerComponents: ControllerCompon
   }
 
   def read(id: String) = Action.async { _ =>
-        dataRepository.read(id).map(_ => Accepted)
-    }
+    dataRepository.read(id).map(_ => Accepted)
+  }
 
   def update(id: String) = Action.async(parse.json) { implicit request =>
     request.body.validate[DataModel] match {
@@ -43,7 +44,16 @@ class ApplicationController @Inject()(val controllerComponents: ControllerCompon
   }
 
   def delete(id: String) = Action.async { _ =>
-       dataRepository.delete(id).map(_ => Accepted)
+    dataRepository.delete(id).map(_ => Accepted)
+  }
+
+  def getGoogleBook(search: String, term: String): Action[AnyContent] = Action.async { implicit request =>
+    service.getGoogleBook(search = search, term = term).map {
+      book =>
+        Ok {
+          Json.toJson(book)
+        }
     }
+  }
 
 }
